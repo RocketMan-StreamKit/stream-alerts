@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": [],
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "target": "ES2020"
+  },
+  "include": ["./src/app.ts", "./src/widget.ts", "./src/panel/**/*.ts", "./src/render/**/*.ts", "./src/shared/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

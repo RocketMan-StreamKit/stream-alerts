@@ -1,0 +1,35 @@
+{
+  "id": "stream-alerts",
+  "name": {
+    "en": "Stream Alerts",
+    "ru": "Алерты для стрима",
+    "uk": "Алерти для стріму"
+  },
+  "description": {
+    "en": "On-screen alerts in OBS for donations, subs, gifts, follows and every event your platform addons provide (bits, channel rewards, …): visual editor with live preview, variants, animations, sounds, images and TTS.",
+    "ru": "Алерты в OBS для донатов, подписок, подарков, фолловов и любых событий, которые дают аддоны площадок (битсы, награды канала, …): визуальный редактор с живым превью, варианты, анимации, звуки, картинки и озвучка.",
+    "uk": "Алерти в OBS для донатів, підписок, подарунків, фоловів і будь-яких подій, які надають аддони платформ (бітси, нагороди каналу, …): візуальний редактор із живим прев'ю, варіанти, анімації, звуки, картинки та озвучення."
+  },
+  "type": "application",
+  "version": "1.0.0",
+  "author": "RocketMan System",
+  "icon": "logo.svg",
+  "permissions": [
+    "WEB_CONTENT",
+    "WEB_END_POINTS",
+    "SOCKET_END_POINTS",
+    "DASHBOARD_EVENTS_INCOMING",
+    "FILE_ACCESS",
+    "TTS",
+    "STATUS"
+  ],
+  "app_version": "1.3.10",
+  "web": "index.html",
+  "web_type": "application",
+  "web_contents": [
+    "style.css",
+    "app.js",
+    "widget.html",
+    "widget.js"
+  ]
+}
