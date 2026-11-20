@@ -116,9 +116,9 @@ const strings: Strings = {
   baseVariant: { en: 'Base', ru: 'Основной', uk: 'Основний' },
   addVariant: { en: '+ Variant', ru: '+ Вариант', uk: '+ Варіант' },
   variantHint: {
-    en: 'A variant replaces the base design when its condition matches (e.g. big donations). The highest matching «From» wins.',
-    ru: 'Вариант заменяет основной дизайн, когда выполняется его условие (например, крупные донаты). Побеждает самый большой подходящий порог «От».',
-    uk: 'Варіант замінює основний дизайн, коли виконується його умова (наприклад, великі донати). Перемагає найбільший відповідний поріг «Від».',
+    en: 'A variant replaces the base design when its condition matches (e.g. big donations). An exact amount («From» = «Up to») wins, otherwise the highest matching «From».',
+    ru: 'Вариант заменяет основной дизайн, когда выполняется его условие (например, крупные донаты). Побеждает точная сумма («От» = «До»), иначе самый большой подходящий порог «От».',
+    uk: 'Варіант замінює основний дизайн, коли виконується його умова (наприклад, великі донати). Перемагає точна сума («Від» = «До»), інакше найбільший відповідний поріг «Від».',
   },
   variantName: {
     en: 'Variant name',
@@ -342,6 +342,17 @@ const strings: Strings = {
   // Condition
   condMin: { en: 'From', ru: 'От', uk: 'Від' },
   condMax: { en: 'Up to', ru: 'До', uk: 'До' },
+  condCurrency: { en: 'Currency', ru: 'Валюта', uk: 'Валюта' },
+  condCurrencyApp: {
+    en: 'App currency ({cur})',
+    ru: 'Валюта приложения ({cur})',
+    uk: 'Валюта застосунку ({cur})',
+  },
+  condCurrencyHint: {
+    en: 'Amounts of this variant are compared in this currency (donations in another currency are converted). Use the donation service currency for exact amounts.',
+    ru: 'Суммы этого варианта сравниваются в этой валюте (донаты в другой валюте пересчитываются). Для точных сумм выберите валюту сервиса донатов.',
+    uk: 'Суми цього варіанта порівнюються в цій валюті (донати в іншій валюті перераховуються). Для точних сум оберіть валюту сервісу донатів.',
+  },
   condMaxHint: {
     en: '0 = no upper limit',
     ru: '0 = без верхней границы',
@@ -410,6 +421,13 @@ const strings: Strings = {
   // Preview
   preview: { en: 'Preview', ru: 'Превью', uk: "Прев'ю" },
   play: { en: '▶ Play', ru: '▶ Проиграть', uk: '▶ Програти' },
+  playMuted: { en: '🔇 Muted', ru: '🔇 Без звука', uk: '🔇 Без звуку' },
+  playMutedHint: {
+    en: 'Play the preview without the alert sound',
+    ru: 'Проиграть превью без звука алерта',
+    uk: 'Програти прев’ю без звуку алерту',
+  },
+  stopPreview: { en: '■ Stop', ru: '■ Стоп', uk: '■ Стоп' },
   testObs: { en: 'Send to OBS', ru: 'Отправить в OBS', uk: 'Надіслати в OBS' },
   testSent: {
     en: 'Test alert sent to OBS',
@@ -691,6 +709,114 @@ const strings: Strings = {
   min: { en: 'min', ru: 'мин', uk: 'хв' },
   px: { en: 'px', ru: 'px', uk: 'px' },
   pct: { en: '%', ru: '%', uk: '%' },
+  // DonationAlerts import
+  daOpen: {
+    en: 'Import from DonationAlerts',
+    ru: 'Импорт из DonationAlerts',
+    uk: 'Імпорт з DonationAlerts',
+  },
+  daTitle: {
+    en: 'Import from DonationAlerts',
+    ru: 'Импорт из DonationAlerts',
+    uk: 'Імпорт з DonationAlerts',
+  },
+  daIntro: {
+    en: 'Paste the alert widget link from DonationAlerts (Widgets → Alerts → group → "Show embed link"). Only donation variations that are switched on are imported; Twitch, YouTube and other platform alerts are skipped.',
+    ru: 'Вставьте ссылку на виджет оповещений из DonationAlerts (Виджеты → Оповещения → группа → «Показать ссылку для встраивания»). Импортируются только включённые вариации донатов; алерты Twitch, YouTube и других площадок пропускаются.',
+    uk: 'Вставте посилання на віджет сповіщень із DonationAlerts (Віджети → Сповіщення → група → «Показати посилання для вбудовування»). Імпортуються лише увімкнені варіації донатів; алерти Twitch, YouTube та інших платформ пропускаються.',
+  },
+  daSecretHint: {
+    en: 'The link contains a secret token: it is used only for this import and is not saved.',
+    ru: 'Ссылка содержит секретный токен: он используется только для этого импорта и не сохраняется.',
+    uk: 'Посилання містить секретний токен: він використовується лише для цього імпорту й не зберігається.',
+  },
+  daLoad: { en: 'Load', ru: 'Загрузить', uk: 'Завантажити' },
+  daLoading: { en: 'Loading…', ru: 'Загрузка…', uk: 'Завантаження…' },
+  daFound: {
+    en: 'Group {group}: {n} donation variations, amounts in {cur}.',
+    ru: 'Группа {group}: вариаций донатов — {n}, суммы в {cur}.',
+    uk: 'Група {group}: варіацій донатів — {n}, суми в {cur}.',
+  },
+  daEmpty: {
+    en: 'No active donation variations found in this group.',
+    ru: 'В этой группе нет включённых вариаций донатов.',
+    uk: 'У цій групі немає увімкнених варіацій донатів.',
+  },
+  daEmptyOtherGroups: {
+    en: 'No active donation variations in this group. Found in groups (count): {groups} — use the link of that group.',
+    ru: 'В этой группе нет включённых вариаций донатов. Они есть в группах (количество): {groups} — используйте ссылку этой группы.',
+    uk: 'У цій групі немає увімкнених варіацій донатів. Вони є в групах (кількість): {groups} — використайте посилання цієї групи.',
+  },
+  daDefaultName: {
+    en: 'Default variation',
+    ru: 'Вариация по умолчанию',
+    uk: 'Варіація за замовчуванням',
+  },
+  daDefaultToBase: {
+    en: 'replaces the base variant',
+    ru: 'заменит базовый вариант',
+    uk: 'замінить базовий варіант',
+  },
+  daNote_silent: {
+    en: 'shows nothing in DonationAlerts (0 s, no image or sound)',
+    ru: 'в DonationAlerts ничего не показывает (0 с, без картинки и звука)',
+    uk: 'у DonationAlerts нічого не показує (0 с, без картинки й звуку)',
+  },
+  daNote_condition: {
+    en: 'has an amount condition that is not supported',
+    ru: 'содержит неподдерживаемое условие по сумме',
+    uk: 'містить непідтримувану умову за сумою',
+  },
+  daMediaHint: {
+    en: 'Images and sounds are played from DonationAlerts servers',
+    ru: 'Картинки и звуки воспроизводятся с серверов DonationAlerts',
+    uk: 'Картинки й звуки відтворюються із серверів DonationAlerts',
+  },
+  daCurrencyHint: {
+    en: 'Imported conditions keep {cur}: donations in other currencies are converted before comparing.',
+    ru: 'Импортированные условия сохраняют {cur}: донаты в других валютах пересчитываются перед сравнением.',
+    uk: 'Імпортовані умови зберігають {cur}: донати в інших валютах перераховуються перед порівнянням.',
+  },
+  daModeAppend: {
+    en: 'Add to current variants',
+    ru: 'Добавить к текущим вариантам',
+    uk: 'Додати до поточних варіантів',
+  },
+  daModeReplace: {
+    en: 'Replace current variants',
+    ru: 'Заменить текущие варианты',
+    uk: 'Замінити поточні варіанти',
+  },
+  daImport: {
+    en: 'Import ({n})',
+    ru: 'Импортировать ({n})',
+    uk: 'Імпортувати ({n})',
+  },
+  daImported: {
+    en: 'Imported: {n}',
+    ru: 'Импортировано: {n}',
+    uk: 'Імпортовано: {n}',
+  },
+  daImportedLimit: {
+    en: 'Imported: {n}, skipped {skipped} (limit {max} variants)',
+    ru: 'Импортировано: {n}, пропущено {skipped} (лимит {max} вариантов)',
+    uk: 'Імпортовано: {n}, пропущено {skipped} (ліміт {max} варіантів)',
+  },
+  err_daBadLink: {
+    en: 'This is not a DonationAlerts alert widget link',
+    ru: 'Это не ссылка на виджет оповещений DonationAlerts',
+    uk: 'Це не посилання на віджет сповіщень DonationAlerts',
+  },
+  err_daFetchFailed: {
+    en: 'Could not load the DonationAlerts page',
+    ru: 'Не удалось загрузить страницу DonationAlerts',
+    uk: 'Не вдалося завантажити сторінку DonationAlerts',
+  },
+  err_daNotWidget: {
+    en: 'No alert settings on the page — check the link (the token may have been regenerated)',
+    ru: 'На странице нет настроек оповещений — проверьте ссылку (токен мог быть перевыпущен)',
+    uk: 'На сторінці немає налаштувань сповіщень — перевірте посилання (токен міг бути перевипущений)',
+  },
   err_valuesFailed: {
     en: 'Could not load values from the source addon',
     ru: 'Не удалось загрузить значения из аддона-источника',

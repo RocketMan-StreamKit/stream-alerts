@@ -6,6 +6,7 @@ import { AlertRenderer } from '../../render/renderer';
 import {
   ANIMATIONS,
   FONTS,
+  MAX_VARIANTS,
   STANDARD_KINDS,
   TEXT_EFFECTS,
   createCatalogVariant,
@@ -23,6 +24,7 @@ import type {
   ValueOption,
 } from '../../shared/types';
 import { fetchValues, sendTest } from '../api';
+import { openDaImport } from '../da-import';
 import { clone, fill, h } from '../dom';
 import {
   colorInput,
@@ -100,6 +102,16 @@ export const editorTab = () => {
     class: 'sa-btn sa-btn--primary',
     text: t('play'),
     attrs: { type: 'button' },
+  });
+  const playMutedBtn = h('button', {
+    class: 'sa-btn',
+    text: t('playMuted'),
+    attrs: { type: 'button', title: t('playMutedHint') },
+  });
+  const stopBtn = h('button', {
+    class: 'sa-btn sa-btn--danger',
+    text: t('stopPreview'),
+    attrs: { type: 'button', hidden: '' },
   });
   const testBtn = h('button', {
     class: 'sa-btn',
@@ -235,17 +247,55 @@ export const editorTab = () => {
     });
   };
 
-  playBtn.addEventListener('click', async () => {
-    playing = true;
-    playBtn.disabled = true;
+  /** Id of the current preview run (a stopped run must not reset a newer one). */
+  let playRun = 0;
+
+  /**
+   * Shows «Play» buttons when idle and «Stop» while the preview plays.
+   * @param active Preview is playing.
+   * @example setPlaying(true);
+   */
+  const setPlaying = (active: boolean) => {
+    playing = active;
+    playBtn.hidden = active;
+    playMutedBtn.hidden = active;
+    stopBtn.hidden = !active;
+  };
+
+  /**
+   * Plays the current variant in the preview.
+   * @param muted Play without the alert sound.
+   * @returns Promise resolved when the alert ends or is stopped.
+   * @example await playPreview(true);
+   */
+  const playPreview = async (muted: boolean) => {
+    const run = ++playRun;
+    setPlaying(true);
     try {
-      await renderer.play(previewPayload());
+      await renderer.play(previewPayload(), { muted });
     } finally {
-      playing = false;
-      playBtn.disabled = false;
-      refreshPreview();
+      if (run === playRun) {
+        setPlaying(false);
+        refreshPreview();
+      }
     }
-  });
+  };
+
+  /**
+   * Stops the preview at once (sound included) and shows the static design again.
+   * @example stopPreview();
+   */
+  const stopPreview = () => {
+    if (!playing) return;
+    playRun += 1;
+    renderer.stop();
+    setPlaying(false);
+    refreshPreview();
+  };
+
+  playBtn.addEventListener('click', () => void playPreview(false));
+  playMutedBtn.addEventListener('click', () => void playPreview(true));
+  stopBtn.addEventListener('click', stopPreview);
   testBtn.addEventListener('click', async () => {
     const s = sample();
     const res = await sendTest(
@@ -351,7 +401,12 @@ export const editorTab = () => {
         h('span', { class: 'sa-seg sa-seg--sm' }, bgButtons),
       ]),
       frame,
-      h('div', { class: 'sa-actions' }, [playBtn, testBtn]),
+      h('div', { class: 'sa-actions' }, [
+        playBtn,
+        playMutedBtn,
+        stopBtn,
+        testBtn,
+      ]),
       h('h4', { class: 'sa-subhead', text: t('sample') }),
       sampleBox,
       h('p', { class: 'sa-muted sa-small', text: t('previewHint') }),
@@ -500,11 +555,22 @@ export const editorTab = () => {
     return h('span', { class: 'sa-media' }, [label, pickBtn, listen]);
   };
 
+  /**
+   * Font picker; a font outside the list (imported design) stays selectable.
+   * @param style Text style.
+   * @returns Select element.
+   * @example fontSelect(v.title);
+   */
   const fontSelect = (style: AlertVariant['title']) =>
     select(
       style,
       'font',
-      FONTS.map(f => [f.name, f.name]),
+      [
+        ...(FONTS.some(f => f.name === style.font)
+          ? []
+          : [[style.font, style.font] as [string, string]]),
+        ...FONTS.map(f => [f.name, f.name] as [string, string]),
+      ],
       changed
     );
 
@@ -566,6 +632,25 @@ export const editorTab = () => {
     ]),
   ];
 
+  /**
+   * Currency choices for donation conditions: app currency first, then common codes and the
+   * current value (imported variants use the DonationAlerts currency).
+   * @param current Current code (`''` = app currency).
+   * @returns Select options.
+   * @example currencyOptions('RUB');
+   */
+  const currencyOptions = (current: string): [string, string][] => {
+    const codes = new Set(
+      [current, 'RUB', 'UAH', 'USD', 'EUR', 'KZT', 'BYN', 'PLN', 'GBP'].filter(
+        c => c && c !== store.appCurrency
+      )
+    );
+    return [
+      ['', t('condCurrencyApp', { cur: store.appCurrency })],
+      ...[...codes].map(c => [c, c] as [string, string]),
+    ];
+  };
+
   const renderEditor = () => {
     const cfg = store.settings.kinds[kind];
     if (variantIndex >= cfg.variants.length) variantIndex = 0;
@@ -590,7 +675,7 @@ export const editorTab = () => {
           },
         })
       ),
-      cfg.variants.length < 20
+      cfg.variants.length < MAX_VARIANTS
         ? h('button', {
             class: 'sa-vtab sa-vtab--add',
             text: t('addVariant'),
@@ -613,7 +698,13 @@ export const editorTab = () => {
                         ? 10
                         : 100;
                 copy.id = newId();
-                copy.condition = { min, max: 0, platforms: [], values: [] };
+                copy.condition = {
+                  min,
+                  max: 0,
+                  platforms: [],
+                  values: [],
+                  currency: '',
+                };
                 copy.name = byAmount
                   ? t('newVariantName', { n: min })
                   : t('newVariantNumbered', { n: cfg.variants.length });
@@ -650,6 +741,22 @@ export const editorTab = () => {
           })
         : null,
       h('p', { class: 'sa-muted sa-small', text: t('variantHint') }),
+      kind === 'donation'
+        ? h('div', { class: 'sa-actions' }, [
+            h('button', {
+              class: 'sa-btn',
+              text: t('daOpen'),
+              attrs: { type: 'button' },
+              on: {
+                click: () =>
+                  openDaImport(() => {
+                    variantIndex = 0;
+                    renderAll();
+                  }),
+              },
+            }),
+          ])
+        : null,
     ]);
 
     const toolbar = h('div', { class: 'sa-actions' }, [
@@ -733,7 +840,10 @@ export const editorTab = () => {
     );
     const mode = conditionMode(kind);
     const hasValue = mode === 'amount';
-    const amountLabel = valueLabel(kind);
+    const amountLabel =
+      kind === 'donation' && v.condition.currency
+        ? t('value_donation', { cur: v.condition.currency })
+        : valueLabel(kind);
 
     /**
      * Checklist of trigger values for `values` conditions.
@@ -832,6 +942,21 @@ export const editorTab = () => {
                   `${t('condMax')} (${amountLabel})`,
                   numberInput(v.condition, 'max', { min: 0 }, changed),
                   t('condMaxHint')
+                )
+              : null,
+            kind === 'donation'
+              ? row(
+                  t('condCurrency'),
+                  select(
+                    v.condition,
+                    'currency',
+                    currencyOptions(v.condition.currency),
+                    () => {
+                      changed();
+                      renderAll();
+                    }
+                  ),
+                  t('condCurrencyHint')
                 )
               : null,
             mode === 'values'
@@ -1051,7 +1176,7 @@ export const editorTab = () => {
         ),
         hasValue
           ? row(
-              `${t('ttsMin')} (${amountLabel})`,
+              `${t('ttsMin')} (${valueLabel(kind)})`,
               numberInput(v.tts, 'min', { min: 0 }, changed)
             )
           : null,

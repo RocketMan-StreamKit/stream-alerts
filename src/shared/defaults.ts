@@ -114,6 +114,35 @@ export const FONTS: { name: string; axis?: string }[] = [
 ];
 
 /**
+ * Locally installed fonts that are never requested from Google Fonts. Any other font name that
+ * is not in {@link FONTS} (e.g. `Exo 2` from an imported DonationAlerts alert) is loaded from
+ * Google Fonts by name.
+ * @example SYSTEM_FONTS.includes('arial'); // true
+ */
+export const SYSTEM_FONTS = [
+  'arial',
+  'georgia',
+  'impact',
+  'verdana',
+  'tahoma',
+  'times new roman',
+  'trebuchet ms',
+  'courier new',
+  'comic sans ms',
+  'segoe ui',
+  'helvetica',
+  'sans-serif',
+  'serif',
+  'monospace',
+];
+
+/**
+ * Maximum variants per alert kind (base included).
+ * @example if (cfg.variants.length < MAX_VARIANTS) addVariant();
+ */
+export const MAX_VARIANTS = 60;
+
+/**
  * Built-in sounds (synthesized in the widget with Web Audio — no files needed).
  * @example BUILTIN_SOUNDS.map(s => `builtin:${s}`);
  */
@@ -344,7 +373,7 @@ export const createVariant = (
     id: newId(),
     name: 'Base',
     enabled: true,
-    condition: { min: 0, max: 0, platforms: [], values: [] },
+    condition: { min: 0, max: 0, platforms: [], values: [], currency: '' },
     durationMs: preset.duration,
     layout: 'image-above',
     image: { src: preset.image, size: 240, radius: 0 },

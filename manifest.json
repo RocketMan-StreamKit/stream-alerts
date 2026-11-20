@@ -11,7 +11,7 @@
     "uk": "Алерти в OBS для донатів, підписок, подарунків, фоловів і будь-яких подій, які надають аддони платформ (бітси, нагороди каналу, …): візуальний редактор із живим прев'ю, варіанти, анімації, звуки, картинки та озвучення."
   },
   "type": "application",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "RocketMan System",
   "icon": "logo.svg",
   "permissions": [
@@ -19,6 +19,7 @@
     "WEB_END_POINTS",
     "SOCKET_END_POINTS",
     "DASHBOARD_EVENTS_INCOMING",
+    "NETWORK_REQUEST",
     "FILE_ACCESS",
     "TTS",
     "STATUS"

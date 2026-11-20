@@ -4,6 +4,7 @@
  */
 import {
   ANIMATIONS,
+  MAX_VARIANTS,
   STAGE_POSITIONS,
   STANDARD_KINDS,
   TEXT_EFFECTS,
@@ -163,6 +164,18 @@ export const mediaRef = (value: unknown, fallback: string) => {
 };
 
 /**
+ * Reads a currency code for variant conditions.
+ * @param value Raw value.
+ * @returns Upper-case code or `''` (app currency).
+ * @example currencyCode('rub'); // 'RUB'
+ * @example currencyCode('<b>'); // ''
+ */
+export const currencyCode = (value: unknown) => {
+  const v = typeof value === 'string' ? value.trim().toUpperCase() : '';
+  return /^[A-Z]{3,6}$/.test(v) ? v : '';
+};
+
+/**
  * Sanitizes a text style block.
  * @param raw Raw style.
  * @param base Fallback style.
@@ -214,6 +227,7 @@ export const sanitizeVariant = (
       max: num(cond.max, base.condition.max, 0, 1e12),
       platforms: strings(cond.platforms, 20),
       values: strings(cond.values, 200),
+      currency: currencyCode(cond.currency),
     },
     durationMs: Math.round(num(raw.durationMs, base.durationMs, 1000, 120000)),
     layout: pick(raw.layout, LAYOUTS, base.layout),
@@ -286,7 +300,9 @@ const sanitizeKind = (
 ): KindConfig => {
   const rk = obj(rawValue);
   const fallbackVariant = baseKind?.variants[0] ?? createVariant(kind, lang);
-  const list = Array.isArray(rk.variants) ? rk.variants.slice(0, 20) : null;
+  const list = Array.isArray(rk.variants)
+    ? rk.variants.slice(0, MAX_VARIANTS)
+    : null;
   const variants = list
     ? list.map((v, i) =>
         sanitizeVariant(

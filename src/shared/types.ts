@@ -189,7 +189,7 @@ export type AlertVariant = {
   enabled: boolean;
   /** When this variant is used (ignored for the base variant). */
   condition: {
-    /** Minimum amount (donation in app currency, months, gift count, numeric trigger value; 0 = any). */
+    /** Minimum amount (donation in {@link AlertVariant.condition.currency}, months, gift count, numeric trigger value; 0 = any). */
     min: number;
     /** Maximum amount (0 = no limit). */
     max: number;
@@ -197,6 +197,11 @@ export type AlertVariant = {
     platforms: string[];
     /** Only these trigger values — select options / dynamic items such as a reward id (empty = any). */
     values: string[];
+    /**
+     * Currency of `min` / `max` for donations (`''` = app currency). Lets imported or exact-amount
+     * variants ("exactly 151 RUB") match without exchange-rate rounding.
+     */
+    currency: string;
   };
   /** Time the alert stays fully visible, ms. */
   durationMs: number;
@@ -395,6 +400,8 @@ export type AlertEvent = {
   value: number;
   /** Raw trigger value as text (select option / dynamic item id) for `condition.values`. */
   valueId?: string;
+  /** Donation amount in other currencies (`{ RUB: 151 }`) for variants with `condition.currency`. */
+  amounts?: Record<string, number>;
   /** Platform id. */
   platform: string;
 };

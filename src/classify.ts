@@ -68,6 +68,59 @@ export const formatMoney = (amount: number, code: string) => {
 };
 
 /**
+ * Converts an amount between currencies with the app exchange rates.
+ * @param amount Amount.
+ * @param from Source currency code.
+ * @param to Target currency code.
+ * @returns Converted amount or `undefined` when a rate is unknown.
+ * @example await convertAmount(100, 'USD', 'UAH'); // 4150
+ */
+const convertAmount = async (amount: number, from: string, to: string) => {
+  if (from === to) return amount;
+  try {
+    const res = await currency.convert(
+      amount,
+      from as SandboxCurrency,
+      to as SandboxCurrency
+    );
+    if (res.success && Number.isFinite(res.amount)) return res.amount;
+  } catch {
+    // unknown currency — the caller falls back
+  }
+  return undefined;
+};
+
+/**
+ * Donation amount in every currency used by donation variant conditions (`condition.currency`),
+ * so a variant set up in RUB matches the original RUB amount exactly.
+ * @param amount Original amount.
+ * @param code Original currency.
+ * @param appValue Amount in the app currency.
+ * @returns Amounts by currency code.
+ * @example await donationAmounts(151, 'RUB', 75.5); // { RUB: 151, UAH: 75.5 }
+ */
+export const donationAmounts = async (
+  amount: number,
+  code: string,
+  appValue: number
+) => {
+  const amounts: Record<string, number> = {
+    [appCurrency]: appValue,
+    [code]: amount,
+  };
+  const wanted = new Set(
+    (db.settings.kinds.donation?.variants ?? [])
+      .map(v => v.condition.currency)
+      .filter(c => c && !(c in amounts))
+  );
+  for (const target of wanted) {
+    const converted = await convertAmount(amount, code, target);
+    if (converted !== undefined) amounts[target] = converted;
+  }
+  return amounts;
+};
+
+/**
  * Picks the UI-language text from a dashboard message.
  * @param message String or `{ en, ru?, uk? }`.
  * @returns Plain text.
@@ -197,23 +250,15 @@ export const classify = async (
   if (record.type === 'donation' && record.amount) {
     const [amount, code] = record.amount;
     if (!(amount > 0)) return null;
-    let value = amount;
-    if (code && code !== appCurrency) {
-      try {
-        const res = await currency.convert(
-          amount,
-          code as SandboxCurrency,
-          appCurrency as SandboxCurrency
-        );
-        if (res.success && Number.isFinite(res.amount)) value = res.amount;
-      } catch {
-        // keep the original amount
-      }
-    }
+    const value =
+      code && code !== appCurrency
+        ? ((await convertAmount(amount, code, appCurrency)) ?? amount)
+        : amount;
     return {
       kind: 'donation',
       platform,
       value,
+      amounts: await donationAmounts(amount, code || appCurrency, value),
       vars: { ...base, amount: formatMoney(amount, code), message: text },
     };
   }

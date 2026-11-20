@@ -4,7 +4,7 @@
  * and replay it manually.
  */
 import { ensureKind, getEntry, refreshForRecord } from './catalog';
-import { classify, getAppCurrency } from './classify';
+import { classify, donationAmounts, getAppCurrency } from './classify';
 import { addHistory, buildPayload, enqueue } from './queue';
 import { createVariant, newId, sampleEvent } from './shared/defaults';
 import { sanitizeVariant } from './shared/sanitize';
@@ -90,9 +90,10 @@ export const replay = (id: string) => {
  * @param vars Optional template values overriding the sample.
  * @param value Optional numeric value for variant conditions.
  * @param valueId Optional raw trigger value (select option / dynamic item) for variant conditions.
- * @example sendTest('donation');
+ * @returns Promise resolved after the alert is queued.
+ * @example await sendTest('donation');
  */
-export const sendTest = (
+export const sendTest = async (
   kind: AlertKind,
   draftVariant?: unknown,
   vars?: Partial<AlertVars>,
@@ -115,6 +116,12 @@ export const sendTest = (
       typeof valueId === 'string' ? valueId.slice(0, 200) : sample.valueId,
     vars: { ...sample.vars, ...cleanVars(vars) },
   };
+  if (kind === 'donation')
+    event.amounts = await donationAmounts(
+      event.value,
+      getAppCurrency(),
+      event.value
+    );
   const baseVariant =
     ensureKind(kind)?.variants[0] ?? createVariant(kind, LANG.current);
   const variant = draftVariant

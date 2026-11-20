@@ -6,13 +6,14 @@ StreamKit+ application addon: on-screen alerts for donations, subscriptions, gif
 
 - **Visual editor with live preview** — the preview uses the same renderer as the OBS widget, inside a 1920×1080 frame, with editable sample data.
 - **Per event type**: the standard StreamKit+ event types (donations, subscriptions, gift subs, follows, other events) plus **platform events taken from the StreamKit+ trigger catalog** — whatever source addons register with `dashboard.registerTriggers()` (Twitch bits and channel-point rewards, other platforms, games, …). Nothing platform-specific is hardcoded: new events appear in the editor automatically when a source addon is enabled, grouped by that addon.
-- **Variants** — alternate designs by amount (in the app currency), months, gift count or a numeric trigger value, by specific trigger values (a particular reward, tier or option — loaded live from the source addon) and/or platform. Value-bound variants win over amount-only ones; among equals the highest threshold wins.
+- **Variants** (up to 60 per event) — alternate designs by amount (donations: app currency or a chosen currency such as RUB, so exact amounts like «151 RUB» match without exchange-rate rounding), months, gift count or a numeric trigger value, by specific trigger values (a particular reward, tier or option — loaded live from the source addon) and/or platform. Value-bound variants win over amount-only ones, exact amounts («From» = «Up to») win over ranges; among equals the highest threshold wins.
 - **Design**: text template with `{name}`, `{amount}`, `{message}`, `{count}`, `{months}`, `{tier}`, `{event}` (event name from the catalog), `{value}` (readable trigger value: number, reward title, option label), `{platform}`; fonts (Google Fonts with Cyrillic), size, weight, colors, highlight color, outline, shadow, alignment; image / GIF / video (transparent WebM works) with 7 layouts; card background, opacity, border, radius.
 - **Animation**: 12 entrance / exit animations with their own durations, on-screen time and 7 effects for highlighted text.
 - **Sound**: 9 built-in synthesized sounds, uploaded files or links, with volume and delay; optional StreamKit+ TTS.
 - **No duplicates**: events that already triggered an overlay, sound effect, hotkey, game effect or co-op sync are **not shown by default** (each system can be turned back on). Hidden events stay in the feed with the reason and a «Show» button.
 - **Queue**: pause / resume / skip / clear, gap between alerts, max size, expiry for alerts waiting while OBS is closed. Reports `alerts.started()` / `alerts.ended()` so other addons (music players) can duck.
 - **Moderation**: blocked users, banned words in messages.
+- **Import from DonationAlerts** — paste an alert widget link (Widgets → Alerts → group → «Show embed link»): the active donation variations of that group become donation variants (amount conditions in the DonationAlerts currency, templates, fonts, colors, layout, duration, volume, TTS on/off). Images and sounds are played from `files.donationalerts.com`. Platform alerts (Twitch, YouTube, …) are skipped; variations that show nothing in DonationAlerts (0 s, no media — usually amounts reserved for game effects) are unchecked by default. The link holds a secret token: it is used for one request and never stored or logged. Requires `NETWORK_REQUEST`.
 
 ## Usage
 
@@ -32,7 +33,8 @@ StreamKit+ application addon: on-screen alerts for donations, subscriptions, gif
 | `src/pipeline.ts` | Filters, journal, replay, test alerts |
 | `src/queue.ts` | Sequential playback with widget acks (`done`), timeout fallback, gap, pause, skip |
 | `src/media.ts` | Chunked uploads; files kept as base64 in storage and served from `ADDON_TMP_DIR` via `GET media` |
-| `src/endpoints.ts` | Panel HTTP API (`GET panel`, `POST action`, `GET media`) — token-protected |
+| `src/import-da.ts`, `src/shared/donationalerts.ts`, `src/panel/da-import.ts` | DonationAlerts import: page request (worker), parsing of the embedded `a_settings` JSON into variants (pure), import dialog (panel) |
+| `src/endpoints.ts` | Panel HTTP API (`GET panel`, `POST action` incl. `daParse`, `GET media`) — token-protected |
 | `src/render/` | Shared renderer, synthesized sounds, font loader (widget + panel preview) |
 | `src/widget.ts` | OBS page: Socket.IO namespace `/addon/{id}/live`, events `play`, `skip`, `stage`; emits `done` |
 | `src/panel/` | Control panel (editor, feed, settings, media picker) |

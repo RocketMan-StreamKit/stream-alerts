@@ -79,6 +79,22 @@ export const renderText = (template: string, vars: AlertVars) =>
     .trim();
 
 /**
+ * Numeric value of an event as seen by a variant: donations compare in the variant's
+ * `condition.currency` when the event carries that amount, otherwise in the app currency.
+ * @param variant Variant.
+ * @param event Event.
+ * @returns Value to compare with `min` / `max`.
+ * @example conditionValue(rubVariant, { ...ev, value: 75, amounts: { RUB: 151 } }); // 151
+ */
+export const conditionValue = (variant: AlertVariant, event: AlertEvent) => {
+  const code = variant.condition.currency;
+  const amount = code ? event.amounts?.[code] : undefined;
+  return typeof amount === 'number' && Number.isFinite(amount)
+    ? amount
+    : event.value;
+};
+
+/**
  * Checks whether a variant's condition matches an event.
  * @param variant Variant.
  * @param event Event.
@@ -87,8 +103,10 @@ export const renderText = (template: string, vars: AlertVars) =>
  */
 export const variantMatches = (variant: AlertVariant, event: AlertEvent) => {
   const c = variant.condition;
-  if (c.min > 0 && event.value < c.min) return false;
-  if (c.max > 0 && event.value > c.max) return false;
+  const value = conditionValue(variant, event);
+  // Cents tolerance: amounts converted between currencies are rarely whole numbers.
+  if (c.min > 0 && value < c.min - 0.005) return false;
+  if (c.max > 0 && value > c.max + 0.005) return false;
   if (c.platforms.length && !c.platforms.includes(event.platform)) return false;
   if (c.values.length && !c.values.includes(event.valueId ?? '')) return false;
   return true;
@@ -96,13 +114,20 @@ export const variantMatches = (variant: AlertVariant, event: AlertEvent) => {
 
 /**
  * Priority of a matching variant: variants bound to specific trigger values (a particular
- * reward, tier, …) beat amount-only variants; among equals the higher `min` wins.
+ * reward, tier, …) beat amount-only variants; exact amounts (`min === max`) beat ranges;
+ * among equals the higher `min` wins.
  * @param variant Variant.
  * @returns Score.
  * @example variantScore(v); // 1e15 + v.condition.min when v has values
  */
-const variantScore = (variant: AlertVariant) =>
-  (variant.condition.values.length ? 1e15 : 0) + variant.condition.min;
+const variantScore = (variant: AlertVariant) => {
+  const c = variant.condition;
+  return (
+    (c.values.length ? 1e15 : 0) +
+    (c.min > 0 && c.min === c.max ? 1e13 : 0) +
+    c.min
+  );
+};
 
 /**
  * Picks the variant for an event: the best-scoring enabled conditional variant that matches

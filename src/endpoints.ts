@@ -19,6 +19,7 @@ import {
   skipCurrent,
 } from './queue';
 import { getCatalog, getEntry, listValues, refreshCatalog } from './catalog';
+import { parseDonationAlerts } from './import-da';
 import { sanitizeSettings } from './shared/sanitize';
 import { db, flush, markDirty } from './store';
 
@@ -104,7 +105,7 @@ const runAction = async (
       const kind = s(body.kind);
       if (!db.settings.kinds[kind] && !getEntry(kind))
         return { success: false, error: 'badKind' };
-      sendTest(
+      await sendTest(
         kind,
         body.variant,
         body.vars as Record<string, string> | undefined,
@@ -128,6 +129,8 @@ const runAction = async (
         message: res.message,
       };
     }
+    case 'daParse':
+      return parseDonationAlerts(s(body.url).slice(0, 2000), LANG.current);
     case 'replay':
       return replay(s(body.id))
         ? { success: true }
@@ -184,7 +187,8 @@ export const registerEndpoints = async () => {
     const light =
       payload.type === 'mediaChunk' ||
       payload.type === 'mediaBegin' ||
-      payload.type === 'values';
+      payload.type === 'values' ||
+      payload.type === 'daParse';
     return light
       ? result
       : { ...result, state: panelState(payload.type !== 'settings') };

@@ -1291,3 +1291,85 @@ body {
     display: none;
   }
 }
+
+/* ---------- DonationAlerts import ---------- */
+.sa-da__link {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sa-da__link .sa-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.sa-da__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: min(48vh, 460px);
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.sa-da__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--sa-border);
+  border-radius: var(--sa-radius-sm, 8px);
+  background: var(--sa-sunken);
+  cursor: pointer;
+}
+
+.sa-da__item:has(input:checked) {
+  border-color: var(--sa-accent);
+}
+
+.sa-da__item.is-base {
+  border-style: dashed;
+}
+
+.sa-da__item input {
+  margin: 0;
+  flex: none;
+  accent-color: var(--sa-accent);
+}
+
+.sa-da__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sa-da__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.sa-da__note {
+  color: var(--sa-warn, #f0a92b);
+  font-size: 12px;
+}
+
+.sa-da__media {
+  flex: none;
+  font-size: 13px;
+}
+
+.sa-da__empty {
+  margin: 12px 0 0;
+  color: var(--sa-warn, #f0a92b);
+}
+
+@media (max-width: 560px) {
+  .sa-da__link {
+    flex-direction: column;
+  }
+}

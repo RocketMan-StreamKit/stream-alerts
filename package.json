@@ -1,6 +1,6 @@
 {
   "name": "stream-alerts",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "On-screen alerts for donations, bits, subs, gifts, follows and rewards in OBS with a visual editor and live preview.",
   "scripts": {
